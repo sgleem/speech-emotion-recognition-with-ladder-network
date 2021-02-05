@@ -16,4 +16,7 @@ To exectue the whole program, you need to do:
 3. Set the directory path in run.sh with respect to the file path in your machine
 4. Type 'bash run.sh' in your terminal.
 
+You can test the best model by using this command:
+	python3 -u eval_ladder.py --norm_type=2 --net_type=ladder --task_type=STL --model_path=model/ladder
+
 
