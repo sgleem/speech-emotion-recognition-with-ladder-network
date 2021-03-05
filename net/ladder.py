@@ -15,9 +15,9 @@ class Denoiser_MLP(nn.Module):
         )
         
     def forward(self, u, z, uz):
-        h = torch.stack([u,z,uz],2) # {32, 256, 3}
-        result = self.W(h) # {32, 256, 1}
-        result = result.squeeze(2)#reshape(-1, self.feat_num)
+        h = torch.stack([u,z,uz],2)
+        result = self.W(h) 
+        result = result.squeeze(2)
         return result
 
 class HLD(nn.Module):
@@ -29,7 +29,7 @@ class HLD(nn.Module):
         output_dim = args[3]
         p = kwargs.get("dropout", 0.1)
 
-        self.inp_drop = nn.Dropout(0.2)
+        self.inp_drop = nn.Dropout(p)
         self.inp_bn = nn.BatchNorm1d(input_dim, affine=False)
 
         self.W=nn.ModuleList([nn.Linear(input_dim, hidden_dim)])
@@ -44,11 +44,8 @@ class HLD(nn.Module):
             self.norm_bias.append(nn.Parameter(torch.zeros(hidden_dim)))
 
         self.out_W = nn.Linear(hidden_dim, output_dim)
-        self.out_norm = nn.BatchNorm1d(output_dim)
-        self.out_scale = nn.Parameter(torch.ones(output_dim))
-        self.out_bias = nn.Parameter(torch.zeros(output_dim))
 
-    def forward(self, x, noisy=False, need_stat=False, eval=False):
+    def forward(self, x, drop_vec=None, noisy=False, need_drop=False, need_stat=False, eval=False):
         """
         (N, 6373) => (N, 256) => (N, 256) => (N, 3)
         """
@@ -66,7 +63,11 @@ class HLD(nn.Module):
         z_out.append(z)
         
         # h(1) ~ h(L-1) #
-        h = self.inp_drop(z)
+        if drop_vec is None:
+            drop_vec = torch.ones_like(z).cuda()
+            drop_vec = self.inp_drop(drop_vec)
+        # h = self.inp_drop(z)
+        h = drop_vec * z
         # h = z
         
         for i, fc in enumerate(self.W):
@@ -86,26 +87,15 @@ class HLD(nn.Module):
             h = F.relu(self.norm_scale[i]*z+self.norm_bias[i])
 
         # h(L) #
-        o = self.out_W(h)
-        o_norm = self.out_norm(o)
-        if noisy:
-            o_norm = o_norm + (torch.randn_like(o)*math.sqrt(0.3))
-        elif need_stat:
-            if eval:
-                mu_pre = self.out_norm.running_mean
-                var_pre = self.out_norm.running_var
-            else:
-                mu_pre = torch.mean(o, 0)
-                var_pre = torch.var(o, 0, unbiased=False)
-            stat_out.append((mu_pre, var_pre))
-        z_out.append(o_norm)
-        y = self.out_scale*o_norm + self.out_bias
-
+        y = self.out_W(h)
+        
         # y = h
         if need_stat:
-            return y, z_out, stat_out
+            return y, h, z_out, stat_out
+        elif need_drop:
+            return y, h, z_out, drop_vec
         else:
-            return y, z_out 
+            return y, h, z_out 
 
 class HLD_Decoder(nn.Module):
     def __init__(self, *args, **kwargs):
@@ -116,10 +106,7 @@ class HLD_Decoder(nn.Module):
         output_dim = args[3]
 
         self.decoder=nn.ModuleList([
-            nn.BatchNorm1d(output_dim, affine=False),
-            nn.Sequential(
-                nn.Linear(output_dim, hidden_dim), nn.BatchNorm1d(hidden_dim, affine=False)
-            ),
+            nn.BatchNorm1d(hidden_dim, affine=False),
             nn.Sequential(
                 nn.Linear(hidden_dim, hidden_dim), nn.BatchNorm1d(hidden_dim, affine=False)
             ),
@@ -128,15 +115,14 @@ class HLD_Decoder(nn.Module):
             )
         ])
         self.denoiser=nn.ModuleList([
-            Denoiser_MLP(output_dim),
             Denoiser_MLP(hidden_dim),
             Denoiser_MLP(hidden_dim),
             Denoiser_MLP(input_dim)
         ])
-    def forward(self, y_tilde, h_list, stat_list):
+    def forward(self, h_L, h_list, stat_list):
         h_len = len(h_list)
         zbn_out=[]
-        z_hat = y_tilde
+        z_hat = h_L
         for i, fc in enumerate(self.decoder):   
             u = fc(z_hat)
             z_tilde = h_list[h_len-1-i]

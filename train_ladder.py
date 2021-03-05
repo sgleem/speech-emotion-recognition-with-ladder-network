@@ -187,7 +187,7 @@ for attr in attr_list:
 
 
 train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True)
-dev_loader = DataLoader(dev_set, batch_size=1, shuffle=False)
+dev_loader = DataLoader(dev_set, batch_size=2048, shuffle=False)
 
 if is_un:
     un_loader = DataLoader(un_set, batch_size=args.batch_size, shuffle=True)
@@ -209,10 +209,10 @@ for epoch in range(epochs):
         pred = []
         recon_loss = torch.zeros(1).float().cuda()
         for i, attr in enumerate(attr_list):
-            noise_y, noise_list = E_model[attr](x, noisy=True)
-            clean_y, clean_list, clean_stats = E_model[attr](x, need_stat=True)
+            noise_y, noise_h, noise_list = E_model[attr](x, noisy=True)
+            clean_y, clean_h, clean_list, clean_stats = E_model[attr](x, need_stat=True)
 
-            recon_list = D_model[attr](noise_y, noise_list, clean_stats)
+            recon_list = D_model[attr](noise_h, noise_list, clean_stats)
             cur_recon = loss_manager.ladder_loss(recon_list, clean_list)
             recon_loss += cur_recon
             
@@ -221,7 +221,7 @@ for epoch in range(epochs):
             pred.append(cur_pred)
 
         recon_loss = recon_loss.squeeze(0)
-        total_loss = 0.1 * recon_loss
+        total_loss = 1.0 * recon_loss
 
         ccc_stat={"aro":None,"dom":None,"val":None}
         if is_stl:
@@ -268,7 +268,7 @@ for epoch in range(epochs):
                 cur_recon = loss_manager.ladder_loss(recon_list, clean_list)
                 recon_loss += cur_recon
 
-            recon_loss = 0.1 * recon_loss.squeeze(0)
+            recon_loss = 1.0 * recon_loss.squeeze(0)
             for opt in opt_list:
                 for attr in attr_list:
                     opt[attr].zero_grad()
@@ -290,7 +290,7 @@ for epoch in range(epochs):
             y=y.float().cuda()
             pred = []
             for i, attr in enumerate(attr_list):
-                clean_y, _ = E_model[attr](x)
+                clean_y, _, _ = E_model[attr](x)
                 cur_pred = clean_y
                 if is_mtl:
                     pred.append(cur_pred[:, i].unsqueeze(1))

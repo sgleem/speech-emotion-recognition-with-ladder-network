@@ -12,7 +12,7 @@ All of the implementations are based on the paper, ["Semi-Supervised Speech Emot
 
 To exectue the whole program, you need to do:
 1. Request to use MSP-Podcast database in [here](https://ecs.utdallas.edu/research/researchlabs/msp-lab/MSP-Podcast.html), and download it.
-2. If you want to use unlabeled dataset in your training, prepare unlabeled dataset that you want to use. (Make sure that all of the files are wav format, and sampled with 16kHz.)
+2. If you want to use unlabeled dataset in your training, prepare the dataset that you want to use. (Make sure that all of the files are wav format, and sampled with 16kHz.)
 3. Set the directory path in run.sh with respect to the file path in your machine
 4. Type 'bash run.sh' in your terminal.
 

@@ -53,6 +53,7 @@ class HLDset():
 
         self.feat_list = []
         self.lab_list = []
+        self.utt_list = []
 
         self.feat_mean = kwargs.get("feat_mean", None)
         self.feat_var = kwargs.get("feat_var", None)
@@ -65,6 +66,7 @@ class HLDset():
         # print("Feature Selection")
         for utt_id, feat_vec in feat_dict.items():
             if len(feat_vec) != 0:
+                self.utt_list.append(utt_id)
                 self.feat_list.append(feat_vec)
                 
                 if not self.unlabeled:

@@ -34,6 +34,7 @@ parser.add_argument('--norm_type', type=int, help='\
     3. All dataset is normalized by stats from the training set matched with each domain. \
 ')
 parser.add_argument('--model_path', help='model/mlp, model/ladder, ... etc')
+parser.add_argument('--store_path', default=None)
 
 args = parser.parse_args()
 args.net_type=args.net_type.upper()
@@ -107,7 +108,7 @@ with torch.no_grad():
         y=y.float().cuda()
         pred = []
         for i, attr in enumerate(attr_list):
-            clean_y, _ = E_model[attr](x)
+            clean_y, _, _ = E_model[attr](x)
             cur_pred = clean_y
                 
             if is_mtl:
@@ -127,7 +128,14 @@ with torch.no_grad():
     aro = str(np.round(ccc[0], 4))
     dom = str(np.round(ccc[1], 4))
     val = str(np.round(ccc[2], 4))
-    print("Arousal CCC:", aro")
-    print("Dominance CCC:", dom")
-    print("Valence CCC:", val")
+    print("Arousal CCC:", aro)
+    print("Dominance CCC:", dom)
+    print("Valence CCC:", val)
     
+if args.store_path is not None:
+    lab_mu = test_set.lab_mean
+    lab_std = np.sqrt(test_set.lab_var)
+    with open(args.store_path, 'w') as f:
+        for utt_id, p in (test_set.utt_list, total_pred):
+            real_p = lab_std*p + lab_mu
+            f.write(utt_id+"\t"+str(real_p[0])+"\t"+str(real_p[1])+"\t"+str(real_p[2])+"\n")
