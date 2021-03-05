@@ -136,6 +136,6 @@ if args.store_path is not None:
     lab_mu = test_set.lab_mean
     lab_std = np.sqrt(test_set.lab_var)
     with open(args.store_path, 'w') as f:
-        for utt_id, p in (test_set.utt_list, total_pred):
+        for utt_id, p in zip(test_set.utt_list, total_pred):
             real_p = lab_std*p + lab_mu
             f.write(utt_id+"\t"+str(real_p[0])+"\t"+str(real_p[1])+"\t"+str(real_p[2])+"\n")
