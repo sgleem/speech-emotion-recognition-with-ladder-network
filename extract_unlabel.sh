@@ -14,8 +14,8 @@ do
     oname=`echo $fname | awk '{split($0,a,"."); print a[1]}'`.txt
     echo $fname
 
-    if [ ! -f ${hld_path}/${oname} ]; then
-        SMILExtract -C $OpenSmileConfigPath/IS13_ComParE.conf -I $wav_path -O ${hld_path}/${oname} -l 0
+    if [ ! -f ${hld_path}/${oname} ]; then 
+        SMILExtract -C $OpenSmileConfigPath/IS13_ComParE.conf -I $wav_path -O ${hld_path}/${oname} -l 0 || exit 1;
     fi
 done
 
