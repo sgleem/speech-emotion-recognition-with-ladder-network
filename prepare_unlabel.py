@@ -2,7 +2,7 @@ import os
 import sys
 import json
 import pickle as pk
-
+from tqdm import tqdm 
 data_dir = sys.argv[1]
 out_dir = sys.argv[2]
 

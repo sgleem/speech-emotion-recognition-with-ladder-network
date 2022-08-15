@@ -63,7 +63,7 @@ is_mtl = True if args.task_type == "MTL" else False
 is_un = args.use_unlabel
 #######################################
 
-torch.set_deterministic(True)
+# torch.set_deterministic(True)
 torch.manual_seed(args.seed)
 np.random.seed(args.seed)
 
@@ -139,7 +139,7 @@ elif is_mtl:
 with open(model_path+"/str.txt", 'w') as f:
     f.write("model_type: "+args.net_type+"\n")
     f.write("task_type: "+args.task_type+"\n")
-    f.write("unlabel_used: "+args.use_unlabel+"\n")
+    f.write("unlabel_used: "+str(args.use_unlabel)+"\n")
     f.write("norm_type: "+norm_description+"\n")
 ############################################
 
@@ -262,9 +262,9 @@ for epoch in range(epochs):
             ux=ux.float().cuda()
             recon_loss = torch.zeros(1).float().cuda()
             for attr in attr_list:
-                noise_y, noise_list = E_model[attr](ux, noisy=True)
-                clean_y, clean_list, clean_stats = E_model[attr](ux, need_stat=True)
-                recon_list = D_model[attr](noise_y, noise_list, clean_stats)
+                noise_y, noise_h, noise_list = E_model[attr](ux, noisy=True)
+                clean_y, _, clean_list, clean_stats = E_model[attr](ux, need_stat=True)
+                recon_list = D_model[attr](noise_h, noise_list, clean_stats)
                 cur_recon = loss_manager.ladder_loss(recon_list, clean_list)
                 recon_loss += cur_recon
 

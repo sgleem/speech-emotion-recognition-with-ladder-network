@@ -2,7 +2,7 @@
 
 OpenSmileConfigPath=$1 #/home/kyunster/Lib/opensmile/config
 corpus_dir=$2 #/media/kyunster/hdd/corpus/MSP_Podcast_1.7/unlabeled_1.8_clean
-hld_path=./feature/clean_unlabeled/hld
+hld_path=$3
 find ${corpus_dir} -name "*.wav" > filelist.txt
 filelist=( $( cat filelist.txt ))
 
@@ -19,4 +19,4 @@ do
     fi
 done
 
-os.system("rm filelist.txt")
+rm filelist.txt

@@ -21,8 +21,8 @@ do
     echo $fname
 
     if [ ! -f ${hld_path}/${oname} ]; then
-        SMILExtract -C $OpenSmileConfigPath/IS13_ComParE.conf -I $wav_path -O ${hld_path}/${oname} -l 0
+        SMILExtract -C $OpenSmileConfigPath/IS13_ComParE.conf -I $wav_path -O ${hld_path}/${oname} -l 0 || exit 1;
     fi    
 done
 
-os.system("rm filelist.txt")
+rm filelist.txt

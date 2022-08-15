@@ -5,3 +5,4 @@ feature/*
 *.pyc
 *.txt
 *.log
+model_test/*
